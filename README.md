@@ -20,6 +20,10 @@ Then you have to upload it via FTP to your hosting and place it under *wp-conten
 
 Just write a spintax text on the original field and click on _Go spin_ button. The magic will be done.
 
+It accepts 3d Spintax format too. 
+More info -> [http://gorkamu.com/2018/10/como-spinear-un-texto/#Spintax_anidado_o_en_3_dimensiones](http://gorkamu.com/2018/10/como-spinear-un-texto/#Spintax_anidado_o_en_3_dimensiones)
+
+
 ## How to develop and contribute
 
 If you want to develop new features or if you want to contribute fixing bugs you don't need install nothing except docker compose.
