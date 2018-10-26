@@ -1,4 +1,4 @@
-# 💋 💋 WP Simple Spintax
+# 🌪🌪 WP Simple Spintax
 
 ![WP Simple Spintax](https://i.imgur.com/0J1ftOK.png)
 
