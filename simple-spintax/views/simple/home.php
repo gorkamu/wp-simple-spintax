@@ -26,7 +26,7 @@
     <footer class="my-5 pt-5 text-muted text-center text-small">
         <p class="mb-1">© 2018-2019 WP Simple Spintax</p>
         <ul class="list-inline">
-            <li class="list-inline-item"><a href="#" target="_blank">Info</a></li>
+            <li class="list-inline-item"><a href="https://gitlab.com/gorkamu/wp-simple-spintax" target="_blank">Info</a></li>
             <li class="list-inline-item"><a href="https://gitlab.com/users/gorkamu/projects" target="_blank">Labs</a></li>
             <li class="list-inline-item"><a href="http://gorkamu.com/" target="_blank">Author</a></li>
         </ul>
