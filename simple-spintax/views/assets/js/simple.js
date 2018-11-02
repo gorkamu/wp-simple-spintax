@@ -4,6 +4,7 @@ jQuery(function($) {
 
         $('.btn-go-spin').on('click', (e) => {
             e.preventDefault();
+            $('.simple-plagiarism-label').text("");
             let original = $('#original').val();
             $.ajax({
                 url:"/wp-admin/admin-ajax.php",
