@@ -32,6 +32,7 @@ class SimpleSpintaxAdminController
         add_action('admin_menu', ['SimpleSpintaxAdminController', 'renderMenu']);
         add_action('admin_enqueue_scripts', ['SimpleSpintaxAdminController', 'loadResources']);
         add_action('wp_ajax_simple_go_spin', ['SimpleSpintaxAdminController', 'goSpin']);
+	    add_action('wp_ajax_simple_plagiarism_check', ['SimpleSpintaxAdminController', 'plagiarismCheck']);
     }
 
     /**
@@ -104,6 +105,64 @@ class SimpleSpintaxAdminController
 
         wp_send_json($result);
     }
+
+	/**
+	 * @throws Exception
+	 */
+    public static function plagiarismCheck()
+    {
+	    if(!current_user_can('manage_options')){
+		    wp_die( 'You are not allowed to be on this page.' );
+	    }
+
+	    if(!isset($_POST['spinned'])) {
+		    throw new Exception('Missing parameter', 500);
+	    }
+
+	    $occurrences = 0;
+	    $splitted = explode(".", $_POST['spinned']);
+
+	    foreach ( $splitted as $item ) {
+		    if (strpos(self::doCurl($item), ' did not match any documents') === false) {
+			    $occurrences++;
+		    }
+		}
+
+		$result = ($occurrences * 100) / sizeof($splitted);
+
+	    $result = [
+		    'action' => 'simple_plagiarism_check',
+		    'data' => [
+			    'spinned' => $_POST['spinned'],
+			    'result' => $result
+		    ],
+		    'success' => true,
+		    'code' => 200
+	    ];
+
+	    wp_send_json($result);
+	}
+
+	/**
+	 * @param $query
+	 * @return mixed
+	 */
+	public static function doCurl($query) {
+		$query = urlencode(str_replace(" ","%20",$query));
+		$url = sprintf('http://www.google.com/search?hl=en&tbo=d&site=&source=hp&q="%s"', $query);
+
+		$useragent = "Opera/9.80 (J2ME/MIDP; Opera Mini/4.2.14912/870; U; id) Presto/2.4.15";
+		$ch = curl_init ("");
+		curl_setopt ($ch, CURLOPT_URL, $url);
+		curl_setopt ($ch, CURLOPT_USERAGENT, $useragent);
+		curl_setopt ($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		$output = curl_exec($ch);
+		curl_close($ch);
+		sleep(1);
+
+		return $output;
+	}
 
     /**
      * loadResources()

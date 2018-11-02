@@ -15,6 +15,17 @@
                     <div class="col-md-6 mb-3">
                         <label for="spinned">Spinned text</label>
                         <textarea class="form-control" id="spinned" rows="15"></textarea>
+                        <br>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button class="btn btn-secondary btn-block btn-check-plagiarism" disabled>Check plagiarism</button>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="simple-loader"></div>
+                                <div class="simple-plagiarism-label"></div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <br>
@@ -32,3 +43,18 @@
         </ul>
     </footer>
 </div>
+<style>
+    .simple-loader {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
