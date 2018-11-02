@@ -16,13 +16,14 @@ Then you have to upload it via FTP to your hosting and place it under *wp-conten
 
 ## How to use it
 
-![WP Simple Spintax](https://i.imgur.com/KrRTidN.png)
+![WP Simple Spintax](https://i.imgur.com/7PxNthm.png)
 
 Just write a spintax text on the original field and click on _Go spin_ button. The magic will be done.
 
 It accepts 3d Spintax format too. 
 More info -> [http://gorkamu.com/2018/10/como-spinear-un-texto/#Spintax_anidado_o_en_3_dimensiones](http://gorkamu.com/2018/10/como-spinear-un-texto/#Spintax_anidado_o_en_3_dimensiones)
 
+Then, when your spinned article has been done, you are able to check the plagiarism of the result clicking on "Check plagiarism" button.
 
 ## How to develop and contribute
 
