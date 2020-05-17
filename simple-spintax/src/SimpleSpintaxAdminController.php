@@ -32,7 +32,7 @@ class SimpleSpintaxAdminController
         add_action('admin_menu', ['SimpleSpintaxAdminController', 'renderMenu']);
         add_action('admin_enqueue_scripts', ['SimpleSpintaxAdminController', 'loadResources']);
         add_action('wp_ajax_simple_go_spin', ['SimpleSpintaxAdminController', 'goSpin']);
-	    add_action('wp_ajax_simple_plagiarism_check', ['SimpleSpintaxAdminController', 'plagiarismCheck']);
+	    add_action('wp_ajax_nopriv_simple_go_spin', ['SimpleSpintaxAdminController', 'goSpin']);
     }
 
     /**
@@ -73,23 +73,132 @@ class SimpleSpintaxAdminController
      */
     public static function goSpin()
     {
+        global $user_ID;
+        
         if(!current_user_can('manage_options')){
             wp_die( 'You are not allowed to be on this page.' );
         }
 
-        if(!isset($_POST['original'])) {
+        if(!isset($_POST['kw'])) {
             throw new Exception('Missing parameter', 500);
         }
+        
+        if(!isset($_POST['title'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        if(!isset($_POST['excerpt'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        if(!isset($_POST['spintemplate'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        if(!isset($_POST['make'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        if(!isset($_POST['capitalize'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        if(!isset($_POST['ctrsymbol'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        if(!isset($_POST['kwasslug'])) {
+            throw new Exception('Missing parameter', 500);
+        }
+        
+        try {                    
+            $keywords = sanitize_text_field($_POST['kw']);
+            $title = sanitize_text_field($_POST['title']);
+            $excerpt = sanitize_text_field($_POST['excerpt']);
+            $template = $_POST['spintemplate'];
+            $make = $_POST['make'];
+            $ctrsymbol = $_POST['ctrsymbol'];
+            
+            $kws = explode(",", $keywords);
+            $count = 0;            
+            
+            foreach($kws as $kw) {
+                $spinnedTitle = self::$spin->process($title);
+                $spinnedExcerpt = self::$spin->process($excerpt);
+                $spinnedTemplate = self::$spin->process($template);
+                
+                $kw = strtolower($kw);
+                if($_POST['capitalize'] === "true") {
+                    $kw = ucfirst($kw);
+                }
+                
+                $_title = str_replace("%KW%", $kw, $spinnedTitle);
+                $_excerpt = str_replace("%KW%", $kw, $spinnedExcerpt);
+                $_excerpt = substr($_excerpt, 0,150). "...";
+                $_body = str_replace("%KW%", $kw, $spinnedTemplate);
+                
+                $slug = str_replace(" ", "-", $_title);
+                if($_POST['kwasslug'] === "true") {
+                    $slug = str_replace(" ", "-", $kw);
+                }                            
+                
+                $postdate = date('Y-m-d H:i:s');
+                $postdate_gmt = gmdate('Y-m-d H:i:s',strtotime($postdate));
+                
+                $insert = false;
+                $type = null;
+                
+                if('posts' === $make) {
+                    $myp = get_posts([
+                        'name' => strtolower($slug),
+                        'post_type' => 'post',
+                        'numberposts' => 1,
+                        'post_status' => ['future','publish']
+                    ]);
 
-        try {
-            $original = sanitize_text_field($_POST['original']);
-            $spinned = self::$spin->process($original);
+                    if(0 === sizeof($myp)) {
+                        $insert = true;
+                        $type = 'post';                        
+                    }
+                }else if('pages' === $make) {
+                    $page = get_page_by_path($slug);
+                    if(!$page) {
+                        $insert = true;
+                        $type = 'page';                                            
+                    }                    
+                } 
+                
+                if($insert) {
+                    $new_post = [
+                        'post_title' => $_title,
+                        'post_name' => strtolower($slug),
+                        'post_content' => $_body,
+                        'post_status' => 'draft',
+                        'post_date' => $postdate,
+                        'post_date_gmt' => $postdate_gmt,
+                        'post_author' => $user_ID,
+                        'post_type' => $type,
+                        'post_excerpt' => $_excerpt
+                    ];    
+
+                    $post_id = wp_insert_post($new_post);
+                    if($ctrsymbol !== ""){
+                        $ctrsymbol = $ctrsymbol." ";
+                    }
+                    
+                    update_post_meta( $post_id, '_yoast_wpseo_title', $ctrsymbol.ucfirst($_title));
+                    update_post_meta( $post_id, '_yoast_wpseo_focuskw', $kw );
+                    update_post_meta( $post_id, '_yoast_wpseo_metadesc', $_excerpt);
+
+                    $count++;
+                }
+            };            
 
             $result = [
                 'action' => 'simple_go_spin',
                 'data' => [
-                    'original' => $original,
-                    'spinned' => $spinned
+                    'count' => $count,
+                    'type' => $type
                 ],
                 'success' => true,
                 'code' => 200
@@ -106,63 +215,7 @@ class SimpleSpintaxAdminController
         wp_send_json($result);
     }
 
-	/**
-	 * @throws Exception
-	 */
-    public static function plagiarismCheck()
-    {
-	    if(!current_user_can('manage_options')){
-		    wp_die( 'You are not allowed to be on this page.' );
-	    }
-
-	    if(!isset($_POST['spinned'])) {
-		    throw new Exception('Missing parameter', 500);
-	    }
-
-	    $occurrences = 0;
-	    $splitted = explode(".", $_POST['spinned']);
-
-	    foreach ( $splitted as $item ) {
-		    if (strpos(self::doCurl($item), ' did not match any documents') === false) {
-			    $occurrences++;
-		    }
-		}
-
-		$result = ($occurrences * 100) / sizeof($splitted);
-
-	    $result = [
-		    'action' => 'simple_plagiarism_check',
-		    'data' => [
-			    'spinned' => $_POST['spinned'],
-			    'result' => $result
-		    ],
-		    'success' => true,
-		    'code' => 200
-	    ];
-
-	    wp_send_json($result);
-	}
-
-	/**
-	 * @param $query
-	 * @return mixed
-	 */
-	public static function doCurl($query) {
-		$query = urlencode(str_replace(" ","%20",$query));
-		$url = sprintf('http://www.google.com/search?hl=en&tbo=d&site=&source=hp&q="%s"', $query);
-
-		$useragent = "Opera/9.80 (J2ME/MIDP; Opera Mini/4.2.14912/870; U; id) Presto/2.4.15";
-		$ch = curl_init ("");
-		curl_setopt ($ch, CURLOPT_URL, $url);
-		curl_setopt ($ch, CURLOPT_USERAGENT, $useragent);
-		curl_setopt ($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-		$output = curl_exec($ch);
-		curl_close($ch);
-		sleep(1);
-
-		return $output;
-	}
+	
 
     /**
      * loadResources()

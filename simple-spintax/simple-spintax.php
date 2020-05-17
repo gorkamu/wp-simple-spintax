@@ -35,4 +35,3 @@ if ( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) {
     require_once( SIMPLE_SPINTAX__SRC_DIR . 'Spintax.php' );
     add_action( 'init', ['SimpleSpintaxAdminController', 'init'] );
 }
-

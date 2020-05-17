@@ -4,54 +4,44 @@ jQuery(function($) {
 
         $('.btn-go-spin').on('click', (e) => {
             e.preventDefault();
-            $('.simple-plagiarism-label').text("");
-            let original = $('#original').val();
+            let spintemplate = $('#spin-template').val();
+            let kw = $('#kw').val();
+            let title = $('#title').val();
+            let excerpt = $('#excerpt').val();
+            let make = 'posts';
+            let capitalize = $("#capitalize_kw").is(':checked');
+            let kwasslug = $("#kwasslug").is(':checked');
+            let ctrsymbol = $("#ctrsymbol").val();
+            
+            if($("#make_posts").is(':checked')) {  
+                make = 'posts';
+            }
+            
+            if($("#make_pages").is(':checked')) {  
+                make = 'pages';
+            }
+            
             $.ajax({
                 url:"/wp-admin/admin-ajax.php",
                 type: 'POST',
                 data: {
                     action: 'simple_go_spin',
-                    original: original
+                    kw: kw,
+                    title: title,
+                    excerpt: excerpt,
+                    spintemplate: spintemplate,
+                    make: make,
+                    capitalize: capitalize,
+                    ctrsymbol: ctrsymbol,
+                    kwasslug: kwasslug
                 },
                 success: function(res){
                     if(res.code === 200 && res.success) {
-                        $('#spinned').text(res.data.spinned);
-                        $('.btn-check-plagiarism').prop("disabled", false);
-                    }else{
-
+                        let type = res.data.type === 'post' ? 'artículo' : 'páginas';
+                        alert(res.data.count + " " + type + " creados");
                     }
                 }
             });
-        });
-
-        $('.btn-check-plagiarism').on('click', (e) => {
-            e.preventDefault();
-            $('.simple-plagiarism-label').text("");
-            let spinned = $('#spinned').val();
-            if(spinned !== "") {
-                $.ajax({
-                    url:"/wp-admin/admin-ajax.php",
-                    type: 'POST',
-                    data: {
-                        action: 'simple_plagiarism_check',
-                        spinned: spinned
-                    },
-                    beforeSend: function() {
-                        $('.simple-loader').show();
-                    },
-                    complete: function() {
-                        $('.simple-loader').hide();
-                    },
-                    success: function(res){
-                        $('.simple-loader').hide();
-                        if(res.code === 200 && res.success) {
-                            $('.simple-plagiarism-label').text(`Plagiarism Check: ${res.data.result}%`);
-                        }else{
-
-                        }
-                    }
-                });
-            }
         });
     });
 });
